@@ -1,20 +1,18 @@
+from multiprocessing import Event
 import sys, random, pygame
 from pygame.locals import *
 import Animals.animal as animal
-import environment
+import globalVars as glb
+
 pygame.init()
 
-WIDTH = 640 #game window width
-HEIGHT = 480 #game window height
-FPS = 60 #game's speeds
-Pixsize = 2
+WIDTH = 1000 #game window width
+HEIGHT = 1000 #game window height
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) #set the game window
 
-Environment = environment.Environment( animals=[] )
-
 for i in range(400): #generate n cells
-    Animal = animal.Animal(environment=screen)
-    Environment.animals.append(Animal)
+    Animal = animal.Animal(environment=screen, size=random.randint(2, 10), dateOfBirth=0, walkSpeed=random.randint(2, 4), runSpeed=random.randint(5, 7))
+    glb.Environment.animals.append(Animal)
 
 def mainloop():
     while True:
@@ -23,21 +21,22 @@ def mainloop():
                 pygame.quit() #stop pygame
                 sys.exit() #stop the program
         screen.fill((0,0,0)) #clear the screen;
-        for animal in Environment.animals: #update all cells
-            animal.live(Environment.animals)
+        for animal in glb.Environment.animals: #update all cells
+            animal.live()
             animal.draw()
             collisionIdentifier(animal)
 
-            
+        glb.Environment.timeStep()
+           
         pygame.display.update() #update display
-        pygame.time.Clock().tick(FPS) #limit FPS
+        pygame.time.Clock().tick(glb.FPS) #limit FPS
 
 
 def collisionIdentifier(animal):
-    for animal_two in Environment.animals:
+    for animal_two in glb.Environment.animals:
         if animal is not animal_two and animal.rect.colliderect(animal_two.rect):
-            if animal in Environment.animals:
-                Environment.animals.remove(animal)
-            if animal_two in Environment.animals:
-                Environment.animals.remove(animal_two)
+            if animal in glb.Environment.animals:
+                glb.Environment.animals.remove(animal)
+            if animal_two in glb.Environment.animals:
+                glb.Environment.animals.remove(animal_two)
 mainloop()

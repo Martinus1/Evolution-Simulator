@@ -1,46 +1,49 @@
-from ast import walk
-import sys, random, pygame
-from time import sleep
 
-WIDTH = 640 #game window width
-HEIGHT = 480 #game window height
-FPS = 60 #game's speeds
-Pixsize = 2
+from math import log
+import sys, random, pygame
+import globalVars as glb
+
+import names
+import math
+
+ACTIONS = {0:"Wandering", 1: "Running", 2: "Sleeping", 3: "Idle"}
+WIDTH = 1000 #game window width
+HEIGHT = 800 #game window height
 #size, growthRate, walkSpeed, runSpeed, gender, age, weight, averageSize, energy, hunger, averageSurvival, activity,
 class Animal:
-    def __init__(self, environment):
+    def __init__(self, environment, size, dateOfBirth, runSpeed, walkSpeed):
         self.environment = environment
-        """""
-        #body
-        self.averageSize = averageSize
-        self.weight = weight
-        self.growthRate = growthRate
-        self.gender = gender
-        self.color = (255, 255, 255)
-        #movement
-        self.walkSpeed = walkSpeed
-        self.runSpeed = walkSpeed
-        self.age = age
         
-        #limiting factors
-        self.averageSurvival = averageSurvival
-        #functions
+        ###GENERAL
+        self.name = names.get_first_name()
+        self.dateOfBirth = dateOfBirth
+        # 1-Male, 0-Female
+        self.gender = random.randrange(0, 1)
+
+        ###BODY
         self.size = size
-        self.energy = energy
-        self.activity = activity
-        self.hunger = hunger
-        """
-        #other
+        self.color = (random.randrange(0, 255), random.randrange(0, 255), random.randrange(0, 255))
+        
+        ###MOVEMENT
+        self.speed = walkSpeed
+        self.runSpeed = runSpeed
+
+        ###EMOTIONS
+        #From 0-100
+        # hapiness increases when they have offspring
+        self.happiness = 0
+        self.energy = 100
+        self.hunger = 0
+
+        ###INFORMATIVE
+        self.action = 0
+        self.timeAsleep = 0
         self.x = random.randrange(10, WIDTH-10) #x position
         self.y = random.randrange(10, HEIGHT-10) #y position
-        self.speed = random.randrange(2,5) #cell speed
         self.move = [None, None] #realtive x and y coordinates to move to
         self.direction = None #movement direction
-        
-        self.image = pygame.Surface([WIDTH, HEIGHT])
 
-        self.radius = WIDTH // 2  # 25
-        center = [WIDTH // 2, HEIGHT // 2]
+        self.image = pygame.Surface([WIDTH, HEIGHT])
         
         self.rect = self.image.get_rect()
         self.rect.x = random.randint(0, 400)
@@ -48,18 +51,39 @@ class Animal:
 
         self.pos = pygame.math.Vector2(self.rect.center)
         self.dir = pygame.math.Vector2(1, 0).rotate(random.randrange(360))
-        
-    def live(self, animals):
-        self.walk()
 
-    def die(self):
-        print("Death")
+        
+    def live(self):
+        if self.action == 0 or (self.energy == 100):
+            self.wander()
+
+        if self.energy <= 10:
+            self.sleep()
+
+        if self.energy == 0:
+            self.death()
+
+    def death(self):
+        glb.Environment.animals.remove(self)
+
+    def sleep(self):
+        #function to add energy depending on time asleep
+        #this is added every second to energy
+        if self.action != 2:
+            self.action = 2
+            self.energy += (math.log10(math.pow(self.timeAsleep,10) + 1) / 60)
+            self.timeAsleep += glb.Environment.minPerSec
+
+    def endSleep(self):
+        self.action = 1
+        self.timeAsleep = 0
 
     def draw(self):
-        self.rect = pygame.draw.rect(self.environment, (255,255,255), (self.x,self.y,Pixsize,Pixsize),0) #draw the cell
+        self.rect = pygame.draw.rect(self.environment, self.color, (self.x,self.y,self.size,self.size),0) #draw the cell
 
 
-    def walk(self):
+    def wander(self):
+        self.action = 0
         directions = {"S":((-1,2),(1,self.speed)),"SW":((-self.speed,-1),(1,self.speed)),"W":((-self.speed,-1),(-1,2)),"NW":((-self.speed,-1),(-self.speed,-1)),"N":((-1,2),(-self.speed,-1)),"NE":((1,self.speed),(-self.speed,-1)),"E":((1,self.speed),(-1,2)),"SE":((1,self.speed),(1,self.speed))} #((min x, max x)(min y, max y))
         directionsName = ("S","SW","W","NW","N","NE","E","SE") #possible directions
         if random.randrange(0,5) == 2: #move about once every 5 frames
@@ -95,14 +119,13 @@ class Animal:
         if self.move[0] != None: #add the relative coordinates to the cells coordinates
             self.x += self.move[0]
             self.y += self.move[1]
+
 """    
     def run(self):
 
     def attack(self):
     
     def breed(self):
-
-    def sleep(self):
 
     def eat(self):
 """
