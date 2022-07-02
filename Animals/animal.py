@@ -1,3 +1,4 @@
+from ast import walk
 import sys, random, pygame
 from time import sleep
 
@@ -36,9 +37,26 @@ class Animal:
         self.move = [None, None] #realtive x and y coordinates to move to
         self.direction = None #movement direction
         
+        self.image = pygame.Surface([WIDTH, HEIGHT])
+
+        self.radius = WIDTH // 2  # 25
+        center = [WIDTH // 2, HEIGHT // 2]
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, 400)
+        self.rect.y = random.randint(50, 700)
+
+        self.pos = pygame.math.Vector2(self.rect.center)
+        self.dir = pygame.math.Vector2(1, 0).rotate(random.randrange(360))
+        
+    def live(self, animals):
+        self.walk()
+
+    def die(self):
+        print("Death")
 
     def draw(self):
-        pygame.draw.rect(self.environment, (255,255,255), (self.x,self.y,Pixsize,Pixsize),0) #draw the cell
+        self.rect = pygame.draw.rect(self.environment, (255,255,255), (self.x,self.y,Pixsize,Pixsize),0) #draw the cell
 
 
     def walk(self):
